@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SuperPong</title>
+
+    <style>
+        canvas {
+            background: #eee;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+
+</head>
+<body>
+<canvas id="myCanvas" width="480" height="320"></canvas>
+
+
+<script>
+    var canvas = document.getElementById("myCanvas");
+    var ctx = canvas.getContext("2d");
+
+    // Barra
+    var barra = {
+        ancho: 80,
+        alto: 15,
+        x: canvas.width / 2 - 80 / 2,
+        y: canvas.height - 30,
+        color: '#0ad',
+        dibujar: function () {
+
+            ctx.beginPath();
+            ctx.rect(this.x, this.y, this.ancho, this.alto);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.closePath();
+        }
+    };
+
+    // Bolita
+    var bolita = {
+        radio: 15,
+        x: canvas.width / 2 - 80 / 2,
+        y: canvas.height - 50,
+        color: '#d0a',
+        dibujar: function () {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radio, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.closePath();
+        }
+    };
+
+
+    // Bloques
+    var bloques = {
+        contenido: [],
+        columnas: 5,
+        filas: 3,
+        margenTop: 30,
+        margenIzq: 30,
+        init: function () {
+            for (var f = 0; f < this.filas; f++) {
+                for (var c = 0; c < this.columnas; c++) {
+                    this.contenido.push(
+                        {
+                            x: this.margenIzq + c * 75,
+                            y: this.margenTop + f * 20,
+                            existe: true
+                        }
+                    )
+
+                }
+            }
+        },
+        dibujar: function () {
+
+            for (bloque of this.contenido){
+                    ctx.beginPath();
+                    ctx.rect(bloque.x, bloque.y, 70, 18);
+                    ctx.fillStyle = '#259';
+                    ctx.fill();
+                    ctx.closePath();
+            }
+        }
+    };
+
+
+    bolita.dibujar();
+
+    barra.dibujar();
+    bloques.init();
+    bloques.dibujar();
+
+</script>
+</body>
+</html>
