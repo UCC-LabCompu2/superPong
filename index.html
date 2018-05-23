@@ -78,11 +78,13 @@
         dibujar: function () {
 
             for (bloque of this.contenido){
+                if(bloque.existe) {
                     ctx.beginPath();
                     ctx.rect(bloque.x, bloque.y, 70, 18);
                     ctx.fillStyle = '#259';
                     ctx.fill();
                     ctx.closePath();
+                }
             }
         }
     };
