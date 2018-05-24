@@ -16,11 +16,57 @@
 <body>
 <canvas id="myCanvas" width="480" height="320"></canvas>
 
+<audio id="myAudio">
+    <source src="bookFlip2.ogg" type="audio/ogg">
+    Your browser does not support the audio element.
+</audio>
 
+<audio id="audioPerdiste">
+    <source src="Randomize20.ogg" type="audio/ogg">
+    Your browser does not support the audio element.
+</audio>
 <script>
     var canvas = document.getElementById("myCanvas");
     var ctx = canvas.getContext("2d");
 
+    //Teclas Presionadas
+    var rightPressed = false;
+    var leftPressed = false;
+    var juegoPause = false;
+    var score=0;
+    var vidas=3;
+    var sonido = document.getElementById("myAudio");
+    var sonidoP = document.getElementById("audioPerdiste");
+
+    //Verificar si la tecla esta presionada
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+
+    //Presionar
+    function keyDownHandler(e) {
+        //console.log(e.keyCode);
+        if(e.keyCode == 39) {
+            rightPressed = true;
+        }
+        else if(e.keyCode == 37) {
+            leftPressed = true;
+        }
+        else if(e.keyCode == 80){
+            juegoPause = true;
+        }
+    }
+
+    function keyUpHandler(e) {
+        if(e.keyCode == 39) {
+            rightPressed = false;
+        }
+        else if(e.keyCode == 37) {
+            leftPressed = false;
+        }
+        else if(e.keyCode == 80){
+            juegoPause = false;
+        }
+    }
     // Barra
     var barra = {
         ancho: 80,
@@ -29,7 +75,6 @@
         y: canvas.height - 30,
         color: '#0ad',
         dibujar: function () {
-
             ctx.beginPath();
             ctx.rect(this.x, this.y, this.ancho, this.alto);
             ctx.fillStyle = this.color;
@@ -37,13 +82,14 @@
             ctx.closePath();
         }
     };
-
     // Bolita
     var bolita = {
         radio: 15,
         x: canvas.width / 2 - 80 / 2,
         y: canvas.height - 50,
         color: '#d0a',
+        dx: 2,
+        dy: -2,
         dibujar: function () {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radio, 0, Math.PI * 2);
@@ -52,8 +98,6 @@
             ctx.closePath();
         }
     };
-
-
     // Bloques
     var bloques = {
         contenido: [],
@@ -61,13 +105,16 @@
         filas: 3,
         margenTop: 30,
         margenIzq: 30,
+        ancho: 75,
+        alto: 20,
+        separacion: 10,
         init: function () {
             for (var f = 0; f < this.filas; f++) {
                 for (var c = 0; c < this.columnas; c++) {
                     this.contenido.push(
                         {
-                            x: this.margenIzq + c * 75,
-                            y: this.margenTop + f * 20,
+                            x: this.margenIzq + c * (this.ancho + this.separacion),
+                            y: this.margenTop + f * (this.alto + this.separacion),
                             existe: true
                         }
                     )
@@ -76,7 +123,6 @@
             }
         },
         dibujar: function () {
-
             for (bloque of this.contenido){
                 if(bloque.existe) {
                     ctx.beginPath();
@@ -89,12 +135,97 @@
         }
     };
 
+    var dx = -2;
+    var dy = -2;
 
-    bolita.dibujar();
+    function detectarColision() {
+        for (b of bloques.contenido) {
+            if (b.existe) {
+                if (bolita.x > b.x &&
+                    bolita.x < b.x + bloques.ancho &&
+                    bolita.y > b.y &&
+                    bolita.y < b.y + bloques.alto) {  // Hay colision
+                    bolita.dy = -bolita.dy;
+                    b.existe = false;
+                    sonido.play();
+                    score++;
+                    if (score == bloques.filas * bloques.columnas) {
+                        alert("GANASTE, FELICITACIONES!");
+                        document.location.reload();
+                    }
+                }
+            }
+        }
+    }
 
-    barra.dibujar();
+    function dibujarPuntaje() {
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#0095DD";
+        ctx.fillText("Score: "+score, 8, 20);
+    }
+
+    function dibujarVidas() {
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#0095DD";
+        ctx.fillText("Vidas: "+vidas, canvas.width-65, 20);
+    }
+
+    function dibujarJuego() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if(juegoPause==true){
+            alert("El juego esta en pausa");
+
+            juegoPause=false;
+        }
+        else{
+            bolita.dibujar();
+
+            if(bolita.y < 0 + bolita.radio){ //rebota arriba
+                bolita.dy = -bolita.dy;
+            }
+
+            if(bolita.y+bolita.radio > canvas.height){ //rebota abajo
+                if (bolita.x > barra.x && bolita.x < barra.x + barra.ancho) {
+                    bolita.dy = -bolita.dy;
+                }
+                else {
+                    sonidoP.play();
+                    alert("GAME OVER");
+
+                    document.location.reload();
+                }
+            }
+
+            if(bolita.x+bolita.radio > canvas.width){ //rebota derecha
+                bolita.dx = -bolita.dx;
+            }
+
+            if(bolita.x - bolita.radio < 0){ //rebota izquierda
+                bolita.dx = -bolita.dx;
+            }
+
+            if(rightPressed &&  barra.x+barra.ancho < canvas.width) {
+                barra.x += 7;
+            }
+            else if(leftPressed && barra.x > 0) {
+                barra.x -= 7;
+            }
+            detectarColision();
+
+            barra.dibujar();
+            bloques.dibujar();
+
+            bolita.x += bolita.dx;
+            bolita.y += bolita.dy;
+
+            dibujarPuntaje();
+            //dibujarVidas();
+        }
+    }
     bloques.init();
-    bloques.dibujar();
+    setInterval(dibujarJuego, 15);
+
 
 </script>
 </body>
